@@ -1,3 +1,4 @@
+//ExtremeCode
 #include "stdafx.h"
 #include <iostream>
 #include <iterator>
@@ -77,7 +78,7 @@ int solution( string s ) {
 // 코드작성자: ExtremeCode
 // 링크: https://programmers.co.kr/learn/courses/30/lessons/60058
 // 제목: 괄호 변환 parenthesis conversion
-// 풀이설명: 괄호의 짝을 맞추는 알고리즘, 문제풀이에 써있는 루틴을 보고 만든 코드. 
+// 풀이설명: 괄호의 짝을 맞추는 알고리즘 
 
 //균형잡힌 괄호 문자열
 bool isBalancedParenthesisString( string _str )
@@ -382,6 +383,7 @@ std::ostream &operator <<( std::ostream &os, const std::vector<T> &v ) {
 
 //*/
 #ifdef 소수판별
+//ExtremeCode
 bool isPrimeNumber( uint64_t _num )
 {
 	// 뒤자리 수를 찾는다.
@@ -527,7 +529,7 @@ void EXC_Stlye( const set<uint64_t>& _vecPrime )
 //*/
 
 #ifdef 암호생성기
-
+//ExtremeCode
 typedef struct tData
 {
 	int iData;
@@ -674,6 +676,7 @@ int main( int argc, char** argv )
 #endif
 
 #ifdef 농작물 수확하기
+//ExtremeCode
 #include <cstdlib>
 
 #define SAFE_DELETE_ARR(p) if(nullptr != p) { delete[] p; (p) = nullptr; }
@@ -822,6 +825,328 @@ int solution( string name ) {
 		}
 	}
 	return answer;
+}
+#endif
+
+#ifdef 달팽이와사각형
+//# 2017.11.13
+//#ExtremeCode
+//# 문제 풀이: 1707: 달팽이 사각형 문제.(while 문 한번)
+
+#include <iostream>
+using namespace std;
+//#include <ppl.h>
+//using namespace concurrency;
+//#include <time.h>
+
+#define MAX_SIZE 100
+#define SAFE_DELETE_ARRAY(p)  {if(p){ delete[] (p);  (p) = 0;}}
+
+//# enum 방향
+enum class Direction : unsigned char
+{
+	None = 0,
+	Right = 1,
+	Bottom,
+	Left,
+	Top,
+	Total
+};
+
+//# 달팽이 사각형 클래스(바닥)
+class SnailRectClass
+{
+public:
+	SnailRectClass() :
+		m_index( s_maxIndex ),
+		m_direction( Direction::None ), //# default 방향 0. (방향이 없는 상태)
+		m_number( -1 )    //# default -1 (값이 없는 상태)
+	{
+		s_maxIndex++;
+	}
+	SnailRectClass( const SnailRectClass& ) {};
+	~SnailRectClass() {};
+
+private:
+	int m_index; //# 인덱스
+public:
+	Direction m_direction; //# vector (달팽이가 지나갈 방향.)
+	int m_number;  //# 달팽이가 지나간 순서
+private:
+	static int s_maxIndex;
+};
+int SnailRectClass::s_maxIndex = 0;
+
+template <typename T>
+void CheckDirection( T *_snail, const size_t _size, const int _index, Direction& _dir );
+template <typename T>
+void NextIndex( T *_snail, const size_t _size, const int _index, int& _outIndex );
+
+int main( int argc, char** argv )
+{
+#pragma region Initialize
+	size_t N;   //# 크기
+	SnailRectClass *snail; //# 달팽이 사각형
+
+	cin >> N;  //# 크기 입력.
+	if ( N > MAX_SIZE || N < 0 ) return 0;  //# 예외 처리.
+											//int start = clock();
+
+	const size_t SNAILSIZE = N*N; //# 전체 사이즈
+	snail = new SnailRectClass[SNAILSIZE]; //# 객체 생성.
+
+	int i = 0;
+	Direction dir = Direction::Right; //# 처음 오른쪽으로  (IF 확장해서 처음 방향을 바꿔주고 싶다면 우선순위도 그에 맞게 변경 할 것.)
+	int currentIndex = 0;
+	int nextIndex = 0;
+#pragma endregion Initialize
+
+#pragma region Update
+	///////////////////////////////////////////////////////////////////////////////
+	//# 한 방향으로 진행하면서 막혀있을 경우에 방향을 트는 방식을 사용
+	//# 1. 현재 위치에서 진행 방향을 선택을 한다.
+	//# 2. 현재 위치에서 다음에 갈 위치를 선택한다.
+	//# 3. 달팽이가 지나간 위치를 가시적으로 보여주기 위해 값을 넣어준다.
+	//# 4. 동기화를 해준다.
+	//////////////////////////////////////////////////////////////////////////////
+	while ( i < SNAILSIZE )
+	{
+		CheckDirection( snail, N, currentIndex, dir );
+		NextIndex( snail, N, currentIndex, nextIndex );
+		snail[currentIndex].m_number = ++i;
+		currentIndex = nextIndex;
+	}
+
+#pragma endregion Update
+
+#pragma region Rendering
+	//# 렌더링
+	for ( i = 0; i < SNAILSIZE; i++ )
+	{
+		cout << snail[i].m_number << " ";
+		if ( i % N == N - 1 ) cout << endl;
+	}
+#pragma endregion Rendering
+
+#pragma region Shutdown
+	//# 메모리 해제.
+	SAFE_DELETE_ARRAY( snail );
+	//cout << "\n time:" << clock() - start << endl;
+#pragma endregion Shutdown
+	return 0;
+}
+
+//# 현재 달팽이의 방향에 따라 갈 수 있는 방향을 설정한다. 
+//# 우선순위: 오른쪽 -> 아래 -> 왼쪽 -> 위
+template <typename T>
+void CheckDirection( T *_snail, const size_t _size, const int _index, Direction& _dir )
+{
+	switch ( _dir ) //# 진행 방향.
+	{
+	case Direction::Right: //# 오른쪽으로 진행하다가 갈 수 없을 경우. //# (두가지. 1.값이 있을 경우(즉,갔던 경우) || 2.벽이 있을 경우 (즉, 바닥 끝))
+		if ( _snail[_index + 1].m_number != -1 || (_index + 1) % _size == 0 )
+		{
+			_snail[_index].m_direction = Direction::Bottom;
+			_dir = Direction::Bottom;
+		}
+		else
+		{
+			_snail[_index].m_direction = Direction::Right;
+		}
+		break;
+	case Direction::Bottom: //# 아래로 진행하다가 갈 수 없을 경우.
+		if ( _snail[_index + _size].m_number != -1 || (_index + _size) / _size >= _size )
+		{
+			_snail[_index].m_direction = Direction::Left;
+			_dir = Direction::Left;
+		}
+		else
+		{
+			_snail[_index].m_direction = Direction::Bottom;
+		}
+		break;
+	case Direction::Left: //# 왼쪽으로 진행하다가 갈 수 없을 경우.
+		if ( _snail[_index - 1].m_number != -1 || (_index - 1) % _size == _size - 1 )
+		{
+			_snail[_index].m_direction = Direction::Top;
+			_dir = Direction::Top;
+		}
+		else
+		{
+			_snail[_index].m_direction = Direction::Left;
+		}
+		break;
+	case Direction::Top: //# 위쪽으로 진행하다가 갈 수 없을 경우.
+		if ( _snail[_index - _size].m_number != -1 || (_index - _size) < 0 )
+		{
+			_snail[_index].m_direction = Direction::Right;
+			_dir = Direction::Right;
+		}
+		else
+		{
+			_snail[_index].m_direction = Direction::Top;
+		}
+		break;
+	default:
+		cout << "CheckDirection function error " << endl; //# error
+		break;
+	}
+}
+
+//# 달팽이가 바닥의 방향을 보고 다음 지역의 index로 이동. / out ref
+template <typename T>
+void NextIndex( T *_snail, const size_t _size, const int _index, int& _outIndex )
+{
+	switch ( _snail[_index].m_direction )
+	{
+	case Direction::Right: //# 오른쪽으로
+		_outIndex = _index + 1;
+		break;
+	case Direction::Bottom: //# 아래로
+		_outIndex = _index + _size;
+		break;
+	case Direction::Left: //# 왼쪽으로
+		_outIndex = _index - 1;
+		break;
+	case Direction::Top: //# 위로
+		_outIndex = _index - _size;
+		break;
+	default:
+		cout << "NextIndex function error " << endl;  //# error
+		break;
+	}
+}
+
+#endif
+
+#ifdef 행운의문자열
+////https://www.acmicpc.net/problem/1342
+//ExtremeCode
+
+#include <iostream>
+#include <algorithm>
+#include <map>
+#include <vector>
+#include <crtdbg.h>
+using namespace std;
+
+struct Node
+{
+	int iDepth;
+	char cValue;
+	Node* parrentNodeP;
+	vector<Node*> vecChildNodeP;
+};
+
+string strInput;
+size_t ans;
+int iMaxDepth;
+size_t iMapSize;
+size_t iNum;
+map<char, size_t> mapKeyCount;
+
+vector<Node*> vecAllNode;
+
+void luckyString( Node* _pParrent, map<char, size_t>& _mapTemp );
+void CalKeyCount( const char* strInput )
+{
+	size_t iStrSize = strlen( strInput );
+	iMaxDepth = iStrSize;
+
+	for ( size_t i = 0; i < iStrSize; ++i )
+	{
+		mapKeyCount[strInput[i]] = (mapKeyCount.find( strInput[i] ) == mapKeyCount.end()) ? 1 : mapKeyCount[strInput[i]] + 1;
+	}
+
+	iMapSize = mapKeyCount.size();
+}
+
+void luckyString()
+{
+	for ( auto it = mapKeyCount.begin(); it != mapKeyCount.end(); ++it )
+	{
+		//++iNum;
+		if ( it->second < 1 )
+			continue;
+		Node* pParrent = new Node;
+		vecAllNode.push_back( pParrent );
+
+		pParrent->iDepth = 1;
+		pParrent->cValue = it->first;
+		pParrent->parrentNodeP = nullptr;
+
+		it->second -= 1;
+
+		luckyString( pParrent, mapKeyCount );
+		mapKeyCount[pParrent->cValue] += 1;
+	}
+}
+
+void luckyString( Node* _pParrent, map<char, size_t>& _mapTemp )
+{
+	if ( _pParrent->iDepth == iMaxDepth )
+	{
+		//string strTemp;
+		//Node* pTempNode = _pParrent;
+		//while (pTempNode != nullptr)
+		//{
+		//	strTemp.push_back(pTempNode->cValue);
+
+		//	pTempNode = pTempNode->parrentNodeP;
+		//}
+		//std::reverse(strTemp.begin(), strTemp.end());
+		//cout << strTemp << endl;
+		++ans;
+		return;
+	}
+
+	for ( auto it = _mapTemp.begin(); it != _mapTemp.end(); ++it )
+	{
+		//++iNum;
+		if ( it->second < 1 )					// erase비용이 더들어 이렇게 표현 erase사용시 for문 횟수 줄일수있음.
+			continue;
+		if ( _pParrent->cValue != it->first )
+		{
+			Node* pChild = new Node;
+			vecAllNode.push_back( pChild );
+
+			pChild->iDepth = _pParrent->iDepth + 1;
+			pChild->cValue = it->first;
+			pChild->parrentNodeP = _pParrent;
+
+			_pParrent->vecChildNodeP.push_back( pChild );
+
+			it->second -= 1;
+
+			luckyString( pChild, _mapTemp );
+			_mapTemp[pChild->cValue] += 1;
+		}
+	}
+}
+
+void deleteAllNode()
+{
+	for ( auto it = vecAllNode.begin(); it != vecAllNode.end(); ++it )
+		delete *it;
+
+	vecAllNode.clear();
+}
+int main()
+{
+	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+	//_CrtSetBreakAlloc(0000);
+	strInput.reserve( 11 );
+	cin >> strInput;
+
+	CalKeyCount( strInput.c_str() );
+	luckyString();
+
+	cout << ans << endl;
+	//cout << iNum << endl;
+
+	deleteAllNode();
+
+	return 0;
 }
 #endif
 
