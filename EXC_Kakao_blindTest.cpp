@@ -526,6 +526,305 @@ void EXC_Stlye( const set<uint64_t>& _vecPrime )
 #endif //소수판별
 //*/
 
+#ifdef 암호생성기
+
+typedef struct tData
+{
+	int iData;
+
+	tData() : iData( 0 ) {};
+}tData;
+
+const size_t MAX_SIZE = 8;
+const size_t MAX_SINGLE_CYCLE = 5;
+const size_t MAX_TEST_CASE = 10;
+
+class TestClass
+{
+private:
+	size_t m_iPos;
+	int m_iUpdateDataPos;
+
+public:
+	tData m_tData[MAX_SIZE * 2];
+
+	bool InputData( int _iData )
+	{
+		if ( m_iPos >= MAX_SIZE )
+			m_iPos = 0;
+
+		m_tData[m_iPos].iData = _iData;
+
+		++m_iPos;
+
+		return true;
+	}
+
+	bool Update()
+	{
+		int iSingleCycle = 0;
+		int iUpdateDataPos = 0;
+		int iMinusData = 1;
+
+		while ( true )
+		{
+			if ( iUpdateDataPos >= MAX_SIZE * 2 )
+				iUpdateDataPos = 0;
+
+			if ( iSingleCycle >= MAX_SINGLE_CYCLE )
+			{
+				iSingleCycle = 0;
+				iMinusData = 1;
+
+				if ( m_tData[iUpdateDataPos].iData < 10 )
+				{
+					int iFlag = 0;
+
+					for ( size_t i = iUpdateDataPos; i < iUpdateDataPos + MAX_SIZE; ++i )
+					{
+						if ( m_tData[i % (MAX_SIZE * 2)].iData < 10 )
+						{
+							++iFlag;
+						}
+					}
+
+					if ( iFlag >= MAX_SIZE )
+					{
+						m_iUpdateDataPos = iUpdateDataPos;
+					}
+				}
+			}
+
+			if ( iUpdateDataPos >= MAX_SIZE )
+			{
+				m_tData[iUpdateDataPos - MAX_SIZE].iData = m_tData[iUpdateDataPos].iData - iMinusData;
+
+				if ( m_tData[iUpdateDataPos - MAX_SIZE].iData <= 0 )
+				{
+					m_tData[iUpdateDataPos - MAX_SIZE].iData = 0;
+					m_iUpdateDataPos = iUpdateDataPos;
+
+					break;
+				}
+			}
+			else
+			{
+				m_tData[iUpdateDataPos + MAX_SIZE].iData = m_tData[iUpdateDataPos].iData - iMinusData;
+
+				if ( m_tData[iUpdateDataPos + MAX_SIZE].iData <= 0 )
+				{
+					m_tData[iUpdateDataPos + MAX_SIZE].iData = 0;
+					m_iUpdateDataPos = iUpdateDataPos;
+
+					break;
+				}
+			}
+
+			++iSingleCycle;
+			++iMinusData;
+			++iUpdateDataPos;
+		}
+
+		return true;
+	}
+
+	void ShowData( size_t _iTestCaseNum )
+	{
+		std::cout << "#" << _iTestCaseNum;
+		for ( size_t i = m_iUpdateDataPos + 1; i < m_iUpdateDataPos + MAX_SIZE + 1; ++i )
+		{
+			std::cout << " " << m_tData[i % (MAX_SIZE * 2)].iData;
+		}
+		std::cout << std::endl;
+	}
+
+public:
+	TestClass() : m_iPos( 0 ), m_iUpdateDataPos( 0 ) {}
+	~TestClass() {}
+};
+
+
+int main( int argc, char** argv )
+{
+	TestClass testClass[MAX_TEST_CASE];
+	size_t iTestNum = 0;
+	int iInputNum = 0;
+
+	for ( size_t i = 0; i < MAX_TEST_CASE; ++i )
+	{
+		std::cin >> iTestNum;
+
+		for ( size_t j = 0; j < MAX_SIZE; ++j )
+		{
+			std::cin >> iInputNum;
+
+			testClass[i].InputData( iInputNum );
+		}
+
+		testClass[i].Update();
+	}
+
+	for ( size_t i = 0; i < MAX_TEST_CASE; ++i )
+	{
+		testClass[i].ShowData( i + 1 );
+	}
+
+	return 0;
+}
+#endif
+
+#ifdef 농작물 수확하기
+#include <cstdlib>
+
+#define SAFE_DELETE_ARR(p) if(nullptr != p) { delete[] p; (p) = nullptr; }
+
+int CharToInt( char _char )
+{
+	int iNum = _char - 48;
+
+	return iNum;
+}
+
+int* arrTotalNum = nullptr;
+void ShowData( size_t _iTestCaseNum )
+{
+	std::cout << "#" << _iTestCaseNum + 1;
+	std::cout << " " << arrTotalNum[_iTestCaseNum];
+	std::cout << std::endl;
+}
+
+int main( int argc, char** argv )
+{
+	size_t iMaxTestCaseNum;
+	size_t iTileSize;
+
+	std::cin >> iMaxTestCaseNum;
+
+	arrTotalNum = new int[iMaxTestCaseNum] {0, };
+
+	for ( size_t iTestNum = 0; iTestNum < iMaxTestCaseNum; ++iTestNum )
+	{
+		std::cin >> iTileSize;
+
+		char* arrTile = new char[iTileSize + 1];
+
+		int iTempPos = 0;
+		int iSingleNum = 0;
+		int iTempBlankNum = 0;
+
+		for ( size_t i = 0; i < iTileSize; ++i )
+		{
+			std::cin >> arrTile;
+
+			iTempBlankNum = iTileSize / 2 - iTempPos;
+			iTempBlankNum = std::abs( iTempBlankNum );
+
+			for ( size_t j = iTempBlankNum; j < iTileSize - iTempBlankNum; ++j )
+			{
+				iSingleNum = CharToInt( arrTile[j] );
+
+				arrTotalNum[iTestNum] += iSingleNum;
+			}
+
+			++iTempPos;
+		}
+
+		SAFE_DELETE_ARR( arrTile );
+	}
+
+	for ( size_t iTestNum = 0; iTestNum < iMaxTestCaseNum; ++iTestNum )
+	{
+		ShowData( iTestNum );
+	}
+
+	SAFE_DELETE_ARR( arrTotalNum );
+
+	return 0;
+}
+#endif
+
+#ifdef Test1
+int solution( string s )
+{
+	int answer = 1;
+
+	int strLength = s.length();
+
+	bool bLoop = false;
+	char* cmp = &s[0];
+	for ( int i = 1; i < strLength; ++i )
+	{
+		if ( s[i - 1] != 1 )
+		{
+			cmp = &s[i - 1];
+		}
+		if ( s[i] != 1 && s[i] == *cmp )
+		{
+			bLoop = true;
+			int startIndex = i;
+			int endIndex = i + 1;
+			for ( int j = i; j < strLength; ++j )
+			{
+				if ( s[j] != *cmp )
+				{
+					endIndex = j;
+					break;
+				}
+				s[j] = 1;
+			}
+			*cmp = 1;
+			i = endIndex;
+		}
+
+		if ( i >= strLength - 1 )
+		{
+			if ( bLoop == true )
+			{
+				i = 0;
+				bLoop = false;
+			}
+		}
+	}
+
+	for ( int i = 0; i < strLength; ++i )
+	{
+		if ( s[i] != 1 )
+		{
+			answer = 0;
+			break;
+		}
+	}
+
+	return answer;
+}
+#endif
+
+#ifdef Test2
+int solution( string name ) {
+	int answer = 0, i = 0;
+	string temp( name.length(), 'A' );
+	while ( true ) {
+		temp[i] = name[i];
+		name[i] - 'A' > 'Z' + 1 - name[i] ? answer += 'Z' + 1 - name[i] : answer += name[i] - 'A';
+		if ( temp == name )    break;
+		for ( int move = 1; move < name.length(); move++ ) {
+			if ( name[(i + move) % name.length()] != temp[(i + move) % name.length()] ) {
+				i = (i + move) % name.length();
+				answer += move;
+				break;
+			}
+			else if ( name[(i + name.length() - move) % name.length()]
+				!= temp[(i + name.length() - move) % name.length()] ) {
+				i = (i + name.length() - move) % name.length();
+				answer += move;
+				break;
+			}
+		}
+	}
+	return answer;
+}
+#endif
+
 int main()
 {
 	//vector<string> words = { "frodo", "front", "frost", "frozen", "frame", "kakao" };
